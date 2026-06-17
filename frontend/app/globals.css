@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Design tokens — "measured, inspectable RAG you can audit"
+
+   A monochrome base (cool near-whites + near-black ink), ONE restrained indigo
+   accent for interactive surfaces + citations, and amber reserved for the
+   "I couldn't find that" abstention state. Change a value here and it cascades
+   through the whole app — this is the single styling control surface.
+   ========================================================================= */
+:root {
+  --bg: #f5f6f8;            /* page background (cool near-white) */
+  --surface: #ffffff;       /* cards, bubbles, panels */
+  --surface-2: #f0f2f5;     /* subtle raised / hover / inline code */
+  --border: #e5e8ed;        /* hairline borders */
+  --border-strong: #d2d8e0; /* emphasised borders / scrollbar */
+  --ink: #14181f;           /* primary text */
+  --muted: #59616f;         /* secondary text */
+  --faint: #9aa2b1;         /* tertiary / metadata */
+  --accent: #4f46e5;        /* indigo — interactive + citations */
+  --accent-fg: #ffffff;     /* text on accent */
+  --accent-soft: #ececfb;   /* accent tint background */
+  --accent-ink: #3a32b0;    /* accent text on soft background */
+  --warn: #b45309;          /* amber — abstention ("not found") */
+  --warn-soft: #fdf3e4;     /* amber tint background */
+  --ok: #047857;            /* emerald — grounded/answered accents */
+  --user-bubble: #14181f;   /* user message bubble (ink) */
+  --user-ink: #f5f6f8;      /* text inside user bubble */
+}
+
+/* Expose tokens to Tailwind v4 as utilities: bg-surface, text-muted,
+   border-border, bg-accent, text-accent, font-mono, etc. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --color-user-bubble: var(--user-bubble);
+  --color-user-ink: var(--user-ink);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin, unobtrusive scrollbars (the chat + glass-box panels scroll a lot). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Blinking caret shown at the end of an answer while tokens are still streaming. */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.5ch;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: blink 1s steps(1) infinite;
+}
+
+/* Indeterminate sweep used by the "indexing / embedding" upload phase. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 22%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer 1.25s ease-in-out infinite;
+}
+
+/* Soft entrance for new messages + panels. */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fadeUp 0.2s ease-out both;
+}
+
+/* Brief highlight pulse when a citation jumps you to its source chunk. */
+@keyframes flash {
+  0% {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  100% {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+}
+.flash {
+  animation: flash 1.4s ease-out;
+}

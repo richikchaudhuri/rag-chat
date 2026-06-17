@@ -1,0 +1,21 @@
+# RAG backend (Python 3.11)
+# Install:  .venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# NOTE: torch (for the cross-encoder reranker) is the CPU build. Install it FIRST
+# from PyTorch's CPU index so pip doesn't pull the ~2.5 GB CUDA wheel:
+#   .venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+google-genai          # Gemini SDK: generation + embeddings + token counting
+chromadb              # local persistent vector store (cosine top-k search)
+pypdf                 # primary PDF text extraction
+pymupdf               # fallback PDF extraction (handles trickier layouts)
+fastapi               # API server
+uvicorn[standard]     # ASGI server that runs FastAPI (with websockets/SSE extras)
+pydantic              # request/response validation
+python-multipart      # parse multipart/form-data for file uploads (POST /ingest)
+python-dotenv         # load GEMINI_API_KEY from .env
+
+# --- Phase 5: retrieval improvement (hybrid search + reranking) ---
+rank-bm25             # BM25 keyword search for hybrid retrieval
+sentence-transformers # cross-encoder reranker (cross-encoder/ms-marco-MiniLM-L-6-v2)
+torch                 # backs the cross-encoder — install the CPU build (see note above)

@@ -1,0 +1,21 @@
+# --- Python backend ---
+backend/.venv/
+__pycache__/
+*.py[cod]
+
+# --- Secrets (NEVER commit your API key) ---
+.env
+backend/.env
+
+# --- Data & vector store (regenerated from source docs) ---
+backend/data/
+
+# --- Node / Next.js frontend ---
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# --- OS ---
+Thumbs.db
+.DS_Store

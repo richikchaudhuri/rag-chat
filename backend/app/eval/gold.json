@@ -1,0 +1,122 @@
+[
+  {
+    "id": "geoai-cloudinary-id",
+    "question": "What is the Cloudinary project ID used in the system?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [3],
+    "answer_contains": ["dnxpt5gea"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-base-model",
+    "question": "Which vision-language model does GeoAI fine-tune?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [2, 5],
+    "answer_contains": ["Qwen2.5-VL-7B", "Qwen2.5-VL"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-stage1-accuracy",
+    "question": "What overall accuracy did Stage 1 binary detection achieve in the Phase 1 baseline?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [11, 2],
+    "answer_contains": ["76.53", "76.5"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-gpu",
+    "question": "What GPU does the system run on?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [2, 3, 5],
+    "answer_contains": ["A5000"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-lora-rank",
+    "question": "What LoRA rank is used for the QLoRA fine-tuning?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [9],
+    "answer_contains": ["64"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-lora-alpha",
+    "question": "What is the LoRA alpha value in the fine-tuning hyperparameters?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [9],
+    "answer_contains": ["128"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-poll-interval",
+    "question": "How often does the worker poll the assessments table for pending rows?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [4],
+    "answer_contains": ["10 second"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-confidence-method",
+    "question": "How is the Stage 2 confidence score computed?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [6],
+    "answer_contains": ["geometric mean"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-expert-cutoff",
+    "question": "What confidence threshold sends a classification to expert review?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [20],
+    "answer_contains": ["0.80", "0.8"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-stage2-accuracy",
+    "question": "What primary accuracy did Stage 2 type classification reach in the baseline?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [12, 2],
+    "answer_contains": ["48.66", "48.7"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-adapter-size",
+    "question": "How large is the trained LoRA adapter file?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [9],
+    "answer_contains": ["600"],
+    "answerable": true
+  },
+  {
+    "id": "geoai-sse-eventsource",
+    "question": "Why does the dashboard use fetch and ReadableStream instead of EventSource for its live metrics stream?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [19],
+    "answer_contains": ["auth header"],
+    "answerable": true
+  },
+  {
+    "id": "oob-capital-france",
+    "question": "What is the capital of France?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [],
+    "answer_contains": [],
+    "answerable": false
+  },
+  {
+    "id": "oob-world-cup",
+    "question": "Who won the 2018 FIFA World Cup?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [],
+    "answer_contains": [],
+    "answerable": false
+  },
+  {
+    "id": "oob-water-formula",
+    "question": "What is the chemical formula for water?",
+    "source": "GeoAI_Technical_Handbook.pdf",
+    "pages": [],
+    "answer_contains": [],
+    "answerable": false
+  }
+]
