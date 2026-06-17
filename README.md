@@ -1,37 +1,38 @@
-# DocLens — chat with your documents, audit every answer
+# DocLens
 
-**Upload a PDF or text file, ask questions in plain English, and get answers grounded in your documents — every claim cited to the exact source page, with the retrieved passages one click away.**
+**Upload a document. Ask it anything. Get answers that cite the exact page they came from, with the receipts one click away.**
 
-A retrieval-augmented generation (RAG) app built to show the *whole* pipeline, not a black-box wrapper. The retrieval engine is written from scratch — token-aware chunking, embeddings, vector search, grounded generation, citations — then **measured with an evaluation harness** and **improved with hybrid search + cross-encoder reranking**, with the gain proven on a held-out question set.
+Most "chat with your PDF" tools are a magic 8-ball in a trench coat: you ask, it guesses, you nod along and hope. DocLens is the opposite. I built the retrieval engine from scratch (chunking, embeddings, vector search, grounded generation, citations), then did the deeply unglamorous thing and actually *measured* it on a held-out test set. Then I made it measurably better. Then I measured that too, because "trust me, it's smarter now" is not a methodology.
 
-<!-- TODO: add a demo GIF and the live URL once deployed -->
-> **Live demo:** _deploying — link coming._ · **Demo GIF:** _coming._
+> **Live demo:** deploying, link incoming. **Demo GIF:** also incoming. Rome wasn't deployed in a day.
 
----
+## Why you should care
 
-## Why this is different
+Three reasons this isn't another weekend LangChain wrapper:
 
-Most RAG demos are a thin wrapper you have to take on faith. This one is **measured** and **inspectable**:
+**It's measured.** I didn't put "improved retrieval quality" on a slide and take a bow. There's a real eval harness that scores retrieval and answer faithfulness against a hand-built gold set. Receipts, not vibes.
 
-- **📊 Measured** — a real eval harness scores retrieval (hit-rate@k, MRR, precision@k) and answer faithfulness/abstention on a hand-built gold set. I didn't *guess* that reranking helped — I measured it.
-- **🔍 Inspectable ("glass-box")** — every answer ships with the exact chunks it was built from, their source page, and their relevance score. Click any citation to jump straight to its passage.
-- **📈 Improved, with proof** — dense baseline → hybrid (BM25 + vector) → cross-encoder reranking, each step measured on the same gold set.
+**It's inspectable.** Every answer comes with a "glass box": the exact chunks it used, their source page, and their relevance score. Click any citation and it jumps you straight to the passage. If the model says something, you get to check its homework.
 
-## The headline result
+**It got better on purpose.** Dense baseline, then hybrid search, then cross-encoder reranking, each step measured on the same gold set. The graph goes up and to the right, which is the only direction I accept.
 
-Retrieval quality on a 15-question held-out gold set (a technical handbook):
+## The headline (a.k.a. the receipts)
 
-| Retrieval method | MRR | Hit-rate@1 | Hit-rate@3 | Hit-rate@5 |
+Retrieval quality on a 15-question held-out gold set:
+
+| Retrieval method | MRR | Hit@1 | Hit@3 | Hit@5 |
 |---|---|---|---|---|
 | Dense (cosine baseline) | 0.772 | 66.7% | 83.3% | 83.3% |
-| + Hybrid (BM25 ⊕ vector, RRF) | 0.726 | 58.3% | 83.3% | 91.7% |
+| + Hybrid (BM25 + vector, RRF) | 0.726 | 58.3% | 83.3% | 91.7% |
 | **+ Cross-encoder rerank** | **0.884** | **83.3%** | **91.7%** | 91.7% |
 
-**Reranking lifts MRR by +0.11 (0.772 → 0.884) and Hit-rate@1 by +17 points (66.7% → 83.3%) over the dense baseline.** Hybrid alone trades top-1 precision for recall (an honest finding — naive rank fusion dilutes an already-strong dense ranker); the cross-encoder then re-orders the wider candidate pool to land the right passage at #1.
+Reranking pushed **MRR from 0.772 to 0.884** and **Hit-rate@1 from 66.7% to 83.3%, a clean +17 points.**
 
-On answer quality (dense baseline): **75% answer accuracy** (states the gold fact, cited) and **100% abstention accuracy** (correctly refuses all out-of-document questions — no hallucination).
+Plot twist: hybrid search *on its own* made the top-1 result slightly worse (it trades precision for recall). I left that row in on purpose, because pretending every experiment works is how you end up shipping a flying suit that can't land. The cross-encoder then re-ranks the wider candidate pool and parks the right passage at #1, which is the whole point.
 
-Reproduce any of it:
+On answers (baseline): **75% answer accuracy** and **100% abstention accuracy**, meaning it correctly refused every out-of-document question. Zero hallucinations. It would rather say "I couldn't find that" than confidently invent something, which is a refreshingly high bar these days.
+
+Want to re-run the numbers yourself? Be my guest:
 ```bash
 python app/eval/run.py --compare dense hybrid rerank   # the table above
 python app/eval/run.py --answers                       # faithfulness + abstention
@@ -40,53 +41,52 @@ python app/eval/run.py --answers                       # faithfulness + abstenti
 ## How it works
 
 ```
-Ingest:  PDF/txt → parse → token-aware chunking → embed (Gemini) → store (ChromaDB)
+Ingest:  PDF / txt  ->  parse  ->  token-aware chunking  ->  embed (Gemini)  ->  store (ChromaDB)
 
-Ask (Q&A):  question → [ BM25 + vector retrieval → RRF fuse → cross-encoder rerank ] → top-k
-                     → grounded prompt ("answer ONLY from this context; cite the page;
-                       if it isn't here, say so") → Gemini, streamed token-by-token
-                     → answer + clickable page citations + glass-box of the source chunks
+Ask:     question  ->  [ BM25 + vector retrieval  ->  RRF fuse  ->  cross-encoder rerank ]  ->  top-k
+                    ->  grounded prompt ("answer ONLY from this; cite the page; no bluffing")
+                    ->  Gemini, streamed token by token  ->  answer + clickable citations + glass box
 ```
 
-Two answer modes: **Q&A** (strict extractive — refuses if the answer isn't in the documents) and **Summarise** (whole-document synthesis for study/overview questions), with a one-click nudge from one to the other.
+Two modes, because not every question is the same shape. **Q&A** is the strict one: it answers from your documents or it stays quiet. **Summarise** reads the whole document for the "give me the key points" study questions. There's a one-click nudge between them, so you never have to guess which one you actually wanted.
 
-### From scratch vs. libraries
-**Hand-built** (the parts I can explain line by line): token-aware chunking, embedding orchestration (query/document task-type pairing, batching, rate-limit retry), the retrieval pipeline, Reciprocal Rank Fusion, the grounded-prompt + citation + abstention contract, and the evaluation harness.
-**Libraries** (where bespoke code breaks on real input): PDF text extraction (`pypdf`/`pymupdf`), approximate-nearest-neighbour search (`ChromaDB`), the LLM + embeddings (`Gemini`), and the cross-encoder model (`sentence-transformers`).
+### What I built vs. what I borrowed
+
+I'm confident, not delusional. The clever bits are hand-built: token-aware chunking, the embedding pipeline (query/document task-type pairing, batching, rate-limit retries), the retrieval logic, Reciprocal Rank Fusion, the grounded prompt with its citation and "I don't know" contract, and the entire eval harness. The boring-but-load-bearing bits are libraries, because reinventing a PDF parser is a fantastic way to lose a weekend: `pypdf` / `pymupdf` for extraction, `ChromaDB` for vector search, `Gemini` for the LLM and embeddings, and `sentence-transformers` for the cross-encoder.
 
 ## Stack
-- **Backend:** Python · FastAPI (SSE streaming) · ChromaDB · Google Gemini (`gemini-2.0-flash` + `gemini-embedding-001`)
-- **Retrieval:** from-scratch chunking + cosine top-k · hybrid BM25 + vector (`rank-bm25`, Reciprocal Rank Fusion) · cross-encoder reranking (`sentence-transformers`, `ms-marco-MiniLM-L-6-v2`)
-- **Frontend:** Next.js / React (App Router) · Tailwind CSS · streamed answers, clickable citations, glass-box panel, upload-with-progress — no UI-component library
-- **Eval:** custom harness — gold Q&A set, page-level relevance labels, hit-rate@k / MRR / precision@k + faithfulness & abstention
+
+- **Backend:** Python, FastAPI (with SSE streaming), ChromaDB, Google Gemini
+- **Retrieval:** from-scratch chunking and cosine top-k, hybrid BM25 + vector (Reciprocal Rank Fusion), cross-encoder reranking (`ms-marco-MiniLM-L-6-v2`)
+- **Frontend:** Next.js / React, Tailwind, streamed answers, clickable citations, the glass-box panel, upload with a real progress bar, and exactly zero UI component libraries (I like control)
+- **Eval:** a custom harness with a gold Q&A set, page-level relevance labels, hit-rate@k / MRR / precision@k, plus faithfulness and abstention
 
 ## Run it locally
 
-**Prereqs:** Python 3.11, Node 18+, a free [Gemini API key](https://aistudio.google.com) (no card).
+You'll need Python 3.11, Node 18+, and a free [Gemini API key](https://aistudio.google.com) (no credit card).
 
 ```bash
 # 1) Backend
 cd rag-chat-with-docs/backend
 python -m venv .venv
-.venv\Scripts\activate                                              # Windows (use source .venv/bin/activate on macOS/Linux)
-pip install torch --index-url https://download.pytorch.org/whl/cpu  # CPU build — skips the giant CUDA wheel
+.venv\Scripts\activate                                              # Windows (use source .venv/bin/activate elsewhere)
+pip install torch --index-url https://download.pytorch.org/whl/cpu  # CPU build, skips the 2.5 GB CUDA wheel nobody asked for
 pip install -r requirements.txt
 echo GEMINI_API_KEY=your_key_here > .env
-python -m uvicorn app.main:app --port 8000                          # → http://localhost:8000/docs
+python -m uvicorn app.main:app --port 8000                          # http://localhost:8000/docs
 
 # 2) Frontend (new terminal)
 cd rag-chat-with-docs/frontend
 npm install
-npm run dev                                                         # → http://localhost:3000
+npm run dev                                                         # http://localhost:3000
 ```
 
-API surface: `POST /ingest` · `POST /chat` (SSE) · `GET /chunks` · `GET /eval`.
+## The fine print (the honest stuff)
 
-## Notes & honest limits
-- **Free-tier quota:** Gemini's free tier caps **generation at ~20 requests/day per model**. Embeddings (ingest + retrieval) have a much higher quota, so the eval and retrieval metrics run freely; heavy interactive use wants a paid key.
-- **Scanned PDFs:** v1 handles text-based PDFs and `.txt`. OCR for scanned documents is a planned extension.
-- The cross-encoder is preloaded at server startup — a torch model loaded lazily inside a request worker thread can crash the process on Windows.
+- **Free-tier quota:** Gemini's free tier caps generation at roughly 20 requests per day per model. Embeddings are far more generous, so the eval and retrieval metrics run all day; heavy interactive use wants a paid key. Power isn't free, who knew.
+- **Scanned PDFs:** v1 handles text-based PDFs and `.txt`. OCR for scanned documents is on the list.
+- The cross-encoder is preloaded at startup, because loading a torch model inside a request worker thread on Windows is a very fast way to crash a process and learn a lesson.
 
 ---
 
-*Built by Richik Chaudhuri.* <!-- TODO: add links — GitHub · portfolio · LinkedIn -->
+*Built by Richik Chaudhuri.* (GitHub, portfolio, and LinkedIn links coming soon.)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DocLens — measured, inspectable RAG</title>
+<title>DocLens: measured, inspectable RAG</title>
 <meta name="description" content="A from-scratch retrieval-augmented generation app: chat with your documents, get page-cited answers, inspect the retrieved passages, and see a measured retrieval-quality gain from hybrid search + cross-encoder reranking." />
 <style>
   :root{
@@ -64,7 +64,7 @@
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
     </div>
     <h1>Chat with your documents,<br/>audit every answer.</h1>
-    <p class="tagline">A retrieval-augmented generation app built from scratch — page-cited answers, an inspectable “glass-box” of the source passages, and a <strong>measured</strong> improvement in retrieval quality.</p>
+    <p class="tagline">A retrieval-augmented generation app I built from scratch. Page-cited answers, a <strong>glass-box</strong> that shows the exact passages behind every claim, and a retrieval-quality jump I actually <strong>measured</strong> instead of just claiming.</p>
     <div class="cta">
       <a class="btn primary" href="https://github.com/richikchaudhuri/rag-chat">View source on GitHub →</a>
       <a class="btn ghost" href="#results">See the numbers</a>
@@ -74,11 +74,11 @@
 
 <section id="results">
   <div class="wrap">
-    <h2>The headline: measured, not claimed</h2>
+    <h2>The headline: receipts, not vibes</h2>
     <p class="sub">Retrieval quality on a 15-question held-out gold set, scored by a custom evaluation harness.</p>
     <div class="headline">
-      <div class="stat"><div class="big">0.772 → 0.884 <span class="delta">+11 pts</span></div><div class="lbl">MRR — dense baseline → hybrid + reranking</div></div>
-      <div class="stat"><div class="big">66.7% → 83.3% <span class="delta">+17 pts</span></div><div class="lbl">Hit-rate@1 — the right passage ranked first</div></div>
+      <div class="stat"><div class="big">0.772 → 0.884 <span class="delta">+11 pts</span></div><div class="lbl">MRR, dense baseline to hybrid + reranking</div></div>
+      <div class="stat"><div class="big">66.7% → 83.3% <span class="delta">+17 pts</span></div><div class="lbl">Hit-rate@1: the right passage, ranked first</div></div>
     </div>
     <table>
       <thead><tr><th>Retrieval method</th><th>MRR</th><th>Hit@1</th><th>Hit@3</th><th>Hit@5</th></tr></thead>
@@ -88,7 +88,7 @@
         <tr class="win"><td>+ Cross-encoder rerank</td><td>0.884</td><td>83.3%</td><td>91.7%</td><td>91.7%</td></tr>
       </tbody>
     </table>
-    <p class="note">Hybrid alone trades top-1 precision for recall — an honest finding; the cross-encoder then re-orders the wider candidate pool to land the right passage at #1. Answer quality (baseline): 75% answer accuracy, 100% abstention accuracy (no hallucination on out-of-document questions).</p>
+    <p class="note">Hybrid alone traded top-1 precision for recall (an honest result I left in). The cross-encoder then re-orders the wider candidate pool and parks the right passage at #1. Answer quality (baseline): 75% answer accuracy, 100% abstention accuracy, and zero hallucinations on out-of-document questions.</p>
   </div>
 </section>
 
@@ -99,7 +99,7 @@
     <div class="cards">
       <div class="card"><h3>📊 Measured</h3><p>A real eval harness scores retrieval (hit-rate@k, MRR, precision@k) and answer faithfulness on a hand-built gold set. The improvement is proven, not asserted.</p></div>
       <div class="card"><h3>🔍 Inspectable</h3><p>Every answer ships with the exact chunks it was built from, their source page, and relevance score. Click any citation to jump to its passage.</p></div>
-      <div class="card"><h3>📈 Improved</h3><p>Dense baseline → hybrid (BM25 + vector) → cross-encoder reranking — each step measured on the same gold set.</p></div>
+      <div class="card"><h3>📈 Improved</h3><p>Dense baseline → hybrid (BM25 + vector) → cross-encoder reranking, each step measured on the same gold set.</p></div>
     </div>
   </div>
 </section>
@@ -120,10 +120,10 @@
   <div class="wrap">
     <h2>Stack</h2>
     <ul class="stack">
-      <li><b>Backend</b> — Python · FastAPI (SSE streaming) · ChromaDB · Google Gemini</li>
-      <li><b>Retrieval</b> — from-scratch chunking + cosine top-k · hybrid BM25 + vector (Reciprocal Rank Fusion) · cross-encoder reranking (sentence-transformers)</li>
-      <li><b>Frontend</b> — Next.js / React · Tailwind CSS · streamed answers, clickable citations, glass-box, upload-with-progress</li>
-      <li><b>Eval</b> — custom harness: gold Q&amp;A set, page-level relevance, hit-rate@k / MRR / precision@k + faithfulness</li>
+      <li><b>Backend:</b> Python · FastAPI (SSE streaming) · ChromaDB · Google Gemini</li>
+      <li><b>Retrieval:</b> from-scratch chunking + cosine top-k · hybrid BM25 + vector (Reciprocal Rank Fusion) · cross-encoder reranking (sentence-transformers)</li>
+      <li><b>Frontend:</b> Next.js / React · Tailwind CSS · streamed answers, clickable citations, glass-box, upload-with-progress · zero UI component libraries</li>
+      <li><b>Eval:</b> custom harness with a gold Q&amp;A set, page-level relevance, hit-rate@k / MRR / precision@k, plus faithfulness</li>
     </ul>
   </div>
 </section>
