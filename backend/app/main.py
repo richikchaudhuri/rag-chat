@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from app.eval.run import evaluate
@@ -52,6 +53,17 @@ async def lifespan(app: FastAPI):
         print("[startup] reranker preloaded", flush=True)
     except Exception as err:  # noqa: BLE001 - rerank is optional; dense still works
         print(f"[startup] reranker preload skipped ({err})", flush=True)
+    # Seed a sample document so a fresh deploy (empty store) can answer on first
+    # load. Only runs when the store is empty; best-effort, never blocks startup.
+    try:
+        if get_collection().count() == 0:
+            samples_dir = Path(__file__).resolve().parent.parent / "samples"
+            for sample in sorted(samples_dir.glob("*")) if samples_dir.is_dir() else []:
+                if sample.suffix.lower() in {".pdf", ".txt"}:
+                    print(f"[startup] seeding sample document: {sample.name}", flush=True)
+                    ingest(str(sample))
+    except Exception as err:  # noqa: BLE001 - demo seeding is best-effort
+        print(f"[startup] sample seeding skipped ({err})", flush=True)
     yield
 
 
@@ -176,3 +188,12 @@ def eval_endpoint(k: str = "1,3,5,10", answers: bool = False) -> dict:
     spends Gemini generation quota (one generation per gold question)."""
     ks = sorted({int(x) for x in k.split(",") if x.strip().isdigit()}) or [1, 3, 5, 10]
     return evaluate(ks, with_answers=answers)
+
+
+# Serve the built Next.js frontend (the static export) for any non-API path, so
+# the whole app is one origin. Mounted LAST, so the API routes above take
+# precedence. Only active when the build output is present (i.e. inside the
+# Docker image); local dev without a build is unaffected.
+_frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend_out"
+if _frontend_dir.is_dir():
+    app.mount("/", StaticFiles(directory=str(_frontend_dir), html=True), name="frontend")

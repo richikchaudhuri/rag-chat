@@ -1,0 +1,15 @@
+# Keep the build context (and image) lean and secret-free.
+**/.git
+**/node_modules
+**/.next
+**/out
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+backend/.venv
+backend/data
+**/.env
+**/.env.local
+**/.env.*.local
+**/.DS_Store
+.claude

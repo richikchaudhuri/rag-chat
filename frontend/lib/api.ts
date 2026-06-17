@@ -11,8 +11,11 @@ import type { HealthResponse, IngestResponse, StoredChunk } from "./types";
 
 /** Backend base URL. Set in .env.local (NEXT_PUBLIC_API_BASE); falls back to the
  *  local dev server. Trailing slash stripped so `${API_BASE}/health` is clean. */
+// `??` (not `||`) so an explicitly-empty NEXT_PUBLIC_API_BASE means "same origin"
+// (relative paths like /chat), which is exactly what the single-container deploy
+// needs. Unset (local dev) falls back to the local backend.
 export const API_BASE =
-  (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000").replace(/\/+$/, "");
+  (process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000").replace(/\/+$/, "");
 
 /** Errors we surface to the user with a readable message (vs. raw exceptions). */
 export class ApiError extends Error {}

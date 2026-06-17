@@ -1,0 +1,15 @@
+DocLens: Technical Overview
+
+DocLens is a retrieval-augmented generation (RAG) application for chatting with your documents. You upload a PDF or text file, ask questions in plain English, and get answers that are grounded in the document, with citations to the exact source page.
+
+Architecture. The system has a Python FastAPI backend and a Next.js frontend. When you upload a document, the backend parses it, splits it into overlapping token-aware chunks, embeds each chunk with Google's gemini-embedding-001 model, and stores the resulting vectors in a ChromaDB vector store. When you ask a question, the backend embeds the question, retrieves the most relevant chunks, builds a grounded prompt, and streams the answer from a Gemini model token by token.
+
+Retrieval methods. DocLens supports three retrieval strategies. Dense retrieval embeds the question and finds the nearest chunks by cosine similarity. Hybrid retrieval combines dense vector search with BM25 keyword search and fuses the two ranked lists using Reciprocal Rank Fusion. Reranking takes the fused candidate pool and re-scores each question-and-chunk pair with a cross-encoder model called ms-marco-MiniLM-L-6-v2, which reads the pair together for a much sharper relevance judgement.
+
+Measured results. On a fifteen-question held-out gold set, dense retrieval scored a mean reciprocal rank (MRR) of 0.772 and a hit-rate at one of 66.7 percent. Adding the cross-encoder reranker raised the MRR to 0.884 and the hit-rate at one to 83.3 percent, an improvement of about 17 points. On answer quality, the baseline reached 75 percent answer accuracy and 100 percent abstention accuracy, meaning it correctly refused every out-of-document question without hallucinating.
+
+Grounding and citations. Every answer is generated from the retrieved passages only. The prompt instructs the model to answer using just the provided context, to cite the source page for each fact, and to say it could not find the answer rather than guessing. A glass-box panel shows the exact chunks behind each answer, their source page, and their relevance score, so you can audit any claim.
+
+Modes. Question-and-answer mode is strictly extractive and refuses when the answer is not present in the documents. Summarise mode reads the whole document and synthesises the key points, which is useful for study and revision questions.
+
+Built by Richik Chaudhuri.
