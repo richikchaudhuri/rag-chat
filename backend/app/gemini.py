@@ -22,8 +22,24 @@ from google.genai import types
 # This file is backend/app/gemini.py, so backend/.env is two levels up.
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-# One shared client for the whole app (reads GEMINI_API_KEY from the env).
-_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+# Lazily-created shared client. Deferring creation until first use means a missing
+# GEMINI_API_KEY does NOT crash the whole app at import (e.g. on a fresh deploy
+# before the secret is set) — only the first call that needs Gemini fails, with a
+# clear message, while the rest of the app (UI, retrieval plumbing) still starts.
+_client: genai.Client | None = None
+
+
+def _get_client() -> genai.Client:
+    global _client
+    if _client is None:
+        key = os.environ.get("GEMINI_API_KEY")
+        if not key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is not set. Add it to backend/.env locally, or as a "
+                "Hugging Face Space secret named GEMINI_API_KEY."
+            )
+        _client = genai.Client(api_key=key)
+    return _client
 
 GEN_MODEL = "gemini-2.0-flash"      # the "brain" that writes answers
 EMB_MODEL = "gemini-embedding-001"  # turns text into meaning-vectors
@@ -89,7 +105,7 @@ def embed_texts(
         batch = texts[start : start + batch_size]
         for attempt in range(max_retries):
             try:
-                resp = _client.models.embed_content(
+                resp = _get_client().models.embed_content(
                     model=EMB_MODEL, contents=batch, config=config
                 )
                 vectors.extend(e.values for e in resp.embeddings)
@@ -110,7 +126,7 @@ def embed_texts(
 
 def generate(prompt: str) -> str:
     """Send a prompt to Gemini, return the plain-text answer."""
-    return _client.models.generate_content(model=GEN_MODEL, contents=prompt).text
+    return _get_client().models.generate_content(model=GEN_MODEL, contents=prompt).text
 
 
 def generate_stream(prompt: str):
@@ -122,11 +138,11 @@ def generate_stream(prompt: str):
     spinning for several seconds then dumping the whole answer at once. Some
     chunks (e.g. the trailing metadata chunk) carry no text, so we skip those.
     """
-    for chunk in _client.models.generate_content_stream(model=GEN_MODEL, contents=prompt):
+    for chunk in _get_client().models.generate_content_stream(model=GEN_MODEL, contents=prompt):
         if chunk.text:
             yield chunk.text
 
 
 def count_tokens(text: str) -> int:
     """How many Gemini tokens is this text? Used to size chunks correctly."""
-    return _client.models.count_tokens(model=GEN_MODEL, contents=text).total_tokens
+    return _get_client().models.count_tokens(model=GEN_MODEL, contents=text).total_tokens
